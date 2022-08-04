@@ -10,4 +10,34 @@
 
 const String PREFIX_GNGGA = "$GNGGA";
 
+String getStringEntry(String string, uint8_t entry_number) {
+  int next_comma_index = 0;
+  int last_comma_index;
+  
+  for (uint8_t i = 0; i < entry_number; i++) {
+    last_comma_index = next_comma_index;
+    next_comma_index = string.indexOf(',', last_comma_index+1);
+  }
+
+  last_comma_index = next_comma_index;
+  next_comma_index = string.indexOf(',', last_comma_index+1);
+
+  return string.substring(last_comma_index+1, next_comma_index);
+}
+
+bool stringIsGgaData(String gps_string) {
+  return gps_string.startsWith(PREFIX_GNGGA);
+}
+
+bool gpsIsSynchronized(String gps_data) {
+  if (!stringIsGgaData(gps_data)) {
+    return false;
+  }
+
+  String quality_string = getStringEntry(gps_data, GGA_QUALITY_COL);
+  long quality = quality_string.toInt();
+
+  return quality > 0;
+}
+
 #endif

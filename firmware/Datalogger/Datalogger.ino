@@ -16,7 +16,7 @@
 #define CHIP_SELECT_PIN 10
 #define CARD_DETECT_IN 9
 
-String fileName = "gps_data_2.csv";
+String fileName = "072922.csv";
 File myFile;
 
 void setup() {
@@ -55,12 +55,14 @@ void setup() {
     digitalWrite(STATUS_LED_2, status_toggle);
     status_toggle = !status_toggle;
   }
+  
+  digitalWrite(STATUS_LED_2, 0);
   delay(500);
 }
 
 void loop() {
 
-  myFile = SD.open("gps_da2a.csv", FILE_WRITE);
+  myFile = SD.open(fileName, FILE_WRITE);
   
   if (myFile) {
     digitalWrite(STATUS_LED_0, 0);
@@ -81,35 +83,4 @@ void loop() {
   }
 
   delay(10);
-}
-
-
-String getStringEntry(String string, uint8_t entry_number) {
-  int next_comma_index = 0;
-  int last_comma_index;
-  
-  for (uint8_t i = 0; i < entry_number; i++) {
-    last_comma_index = next_comma_index;
-    next_comma_index = string.indexOf(',', last_comma_index+1);
-  }
-
-  last_comma_index = next_comma_index;
-  next_comma_index = string.indexOf(',', last_comma_index+1);
-
-  return string.substring(last_comma_index+1, next_comma_index);
-}
-
-bool stringIsGgaData(String gps_string) {
-  return gps_string.startsWith(PREFIX_GNGGA);
-}
-
-bool gpsIsSynchronized(String gps_data) {
-  if (!stringIsGgaData(gps_data)) {
-    return false;
-  }
-
-  String quality_string = getStringEntry(gps_data, GGA_QUALITY_COL);
-  long quality = quality_string.toInt();
-
-  return quality > 0;
 }
