@@ -4,7 +4,7 @@ from GPS_Helper import BN_220
 from Flight_Tools import Flight
 
 # If running as a project, it will use Datalogger at working directory - if running as a stand alone script, it will use tools directory
-log_file = Path(r'archive\080422.CSV')
+log_file = Path(r'./archive/57210423.C00')
 log_file = log_file if log_file.exists() else r'.\tools' / log_file
 
 data = BN_220(log_file).data

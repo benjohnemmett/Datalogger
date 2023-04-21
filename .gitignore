@@ -3,5 +3,7 @@
 *.csv
 
 *-cache
+__pycache__
 
 venv/
+archive/

@@ -7,11 +7,12 @@ class BN_220:
     def __init__(self, log_file):
         df = pd.read_csv(log_file, names=BN_220.header_names)
 
-        direction = [1 if x == "N" else -1 for x in df["NS"]]
+        ns_direction = [1 if x == "N" else -1 for x in df["NS"]]
+        ew_direction = [1 if x == "E" else -1 for x in df["EW"]]
 
         time = pd.to_datetime(df["time"], format='%H%M%S').dt.time
-        lat = direction * self.degrees_decimal(df['lat'])
-        long = direction * self.degrees_decimal(df['long'])
+        lat = ns_direction * self.degrees_decimal(df['lat'])
+        long = ew_direction * self.degrees_decimal(df['long'])
         alt = df['alt']
 
         self.data = pd.DataFrame({'time': time, 'lat': lat, 'long': long, 'alt': alt})
