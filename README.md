@@ -15,7 +15,7 @@ This project is in a rough draft state and currently includes significant hardwa
 The log file consists of the BN-220 data written directly to a csv file. Only the GGA entries are recorded.
 
 The Log File name format consists of a record number, the date, and a file extension indicating the version number. The format is as follows, XXDDMMYY.cVV where:
-- XX is a record number incremented on each startup
+- XX is a record number incremented on each startup in the range [0-99]
 - DD is the day of the month
 - MM is month
 - YY is the year
@@ -25,14 +25,14 @@ For example, if the next record number is 42 and the current date is April 20, 2
 ## Indicator Lights
 The board includes 5 status LEDs numbered 0 to 4, where LED 0 is closest to the MCU. LED 0 indicates a critical error has occured.
 
-Startup follows the sequence described and is indicated by the LED status lights.
-1. Each LED blinks briefly in sequence from 0 to 4
-1. LED_1 illumination indicates an SD card failure. Initialization is retried every 500ms. Check that the SD card is inserted correctly.
-1. Three fast LED 1 blinks indicates successful SD card initialization.
+Startup sequence is as follows:
+1. Each LED blinks briefly in order from LED_0 to LED_4
+1. Slow LED_1 toggling indicates an SD card failure. SD Card initialization is retried every 500ms until successful.
+1. Three fast LED_1 blinks indicates successful SD card initialization.
 1. LED_2 blinks indicate that GPS is being read and checked for synchronization before continuing.
 1. LED_1 & LED_2 simultaneous blinks indicate that GPS data is being read until a valid date and time stamp is found.
 
-During data collection
+During data collection:
 - LED_3 is illuminated while reading GPS data
 - LED_4 is illuminated while writing data to the SD card
 - LED_0 is illuminated if there is an SD card write error
