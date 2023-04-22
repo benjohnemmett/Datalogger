@@ -25,7 +25,6 @@ uint8_t record_number;
 File myFile;
 
 void setup() {
-  // Open serial communications and wait for port to open:
   Serial.begin(9600);
   setup_status_lights();
 
@@ -70,14 +69,14 @@ void setup() {
   data_string = Serial.readStringUntil('\n');
   while (!stringIsRmcData(data_string)) {
     data_string = Serial.readStringUntil('\n');
-    digitalWrite(STATUS_LED_1, status_toggle); // blink LED 1 & 2 until date & time are found
+    digitalWrite(STATUS_LED_1, status_toggle); // Blink LED 1 & 2 until date & time are found
     digitalWrite(STATUS_LED_2, status_toggle);
     status_toggle = !status_toggle;
   }
+  
   // There is an 8 char filename limit XXDDMMYY.cVV
   // https://forum.arduino.cc/t/sd-card-filename-issue/491760/4
-  // XX is incremented on each startup to avoid naming overlap -> https://docs.arduino.cc/learn/programming/eeprom-guide
-  // VV is a version number
+  // VV is the version number
   String date_time_string = getDateFromRmcString(data_string);
   file_name = getRecordNumberAsString() + date_time_string + "." + file_extension;
   Serial.print("Using filename ");
@@ -89,25 +88,24 @@ void setup() {
 }
 
 void loop() {
-  myFile = SD.open(file_name, FILE_WRITE);
-  
-  if (myFile) {
-    digitalWrite(STATUS_LED_0, 0);
-    digitalWrite(STATUS_LED_3, 1);
-    String data_string = Serial.readStringUntil('\n');
+  String data_string = Serial.readStringUntil('\n');
+  digitalWrite(STATUS_LED_0, 0);
+  digitalWrite(STATUS_LED_3, 1);
 
-    if (data_string.length() > 0) {
-      if (stringIsGgaData(data_string)) {
+  if (stringIsGgaData(data_string)) {
+    myFile = SD.open(file_name, FILE_WRITE);
+    if (myFile) {
+      if (data_string.length() > 0) {
         digitalWrite(STATUS_LED_4, 1);
         myFile.print(data_string);
         digitalWrite(STATUS_LED_4, 0);
       }
+      myFile.close();
+    } else {
+      digitalWrite(STATUS_LED_0, 1);
     }
-    myFile.close();
-    digitalWrite(STATUS_LED_3, 0);
-  } else {
-    digitalWrite(STATUS_LED_0, 1);
   }
+  digitalWrite(STATUS_LED_3, 0);
 
   delay(10);
 }
