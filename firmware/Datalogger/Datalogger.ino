@@ -6,6 +6,10 @@
    ** MISO - pin 12
    ** CLK - pin 13
    ** CS - pin 10 (PB2)
+
+   DIP SWITCHES
+   ** DIP1 - PD2 - Arduino pin 2
+   ** DIP2 - PD3 - Arduino pin 3
 */
 
 #include <EEPROM.h>
@@ -19,10 +23,16 @@
 #define EEPROM_ADDR_RECORD_NUMBER 0
 #define MAX_RECORD_NUMBER 100
 
+#define DIP_1 3
+#define DIP_2 2
+
+enum WriteMode { WRITE_ALL, ONLY_GGA };
+
 String file_name = "no_name.csv";
-String file_extension = "c00"; // File extension corresponds with the firmware version
+String file_extension = "csv";
 uint8_t record_number;
 File myFile;
+WriteMode write_mode = ONLY_GGA;
 
 void setup() {
   Serial.begin(9600);
@@ -35,6 +45,15 @@ void setup() {
   Serial.println(record_number);
   
   pinMode(CHIP_SELECT_PIN, OUTPUT);
+  
+  if (getDipOneValue()) {
+    fast_blinks(STATUS_LED_3, 3);
+    write_mode = WRITE_ALL;
+  }
+
+  if (getDipTwoValue()) {
+    fast_blinks(STATUS_LED_4, 3);
+  }
 
   start_up_lights();
   delay(500);
@@ -49,7 +68,7 @@ void setup() {
       delay(500);
       digitalWrite(STATUS_LED_1, LOW);
     } else {
-      card_mounted = 1;
+      card_mounted = true;
     }
   }
   
@@ -74,11 +93,11 @@ void setup() {
     status_toggle = !status_toggle;
   }
   
-  // There is an 8 char filename limit XXDDMMYY.cVV
+  // There is an 8 char filename limit DDMMYYXX.cVV
   // https://forum.arduino.cc/t/sd-card-filename-issue/491760/4
   // VV is the version number
   String date_time_string = getDateFromRmcString(data_string);
-  file_name = getRecordNumberAsString() + date_time_string + "." + file_extension;
+  file_name = date_time_string + getRecordNumberAsString() + "." + file_extension;
   Serial.print("Using filename ");
   Serial.println(file_name);
   
@@ -92,22 +111,33 @@ void loop() {
   digitalWrite(STATUS_LED_0, 0);
   digitalWrite(STATUS_LED_3, 1);
 
-  if (stringIsGgaData(data_string)) {
-    myFile = SD.open(file_name, FILE_WRITE);
-    if (myFile) {
-      if (data_string.length() > 0) {
-        digitalWrite(STATUS_LED_4, 1);
-        myFile.print(data_string);
-        digitalWrite(STATUS_LED_4, 0);
+  switch (write_mode) {
+    case WRITE_ALL:
+      writeDataToCard(data_string);
+      break;
+    case ONLY_GGA:
+      if (stringIsGgaData(data_string)) {
+        writeDataToCard(data_string);
       }
-      myFile.close();
-    } else {
-      digitalWrite(STATUS_LED_0, 1);
-    }
+      break;
   }
-  digitalWrite(STATUS_LED_3, 0);
 
+  digitalWrite(STATUS_LED_3, 0);
   delay(10);
+}
+
+void writeDataToCard(String data_string) {
+  myFile = SD.open(file_name, FILE_WRITE);
+  if (myFile) {
+    if (data_string.length() > 0) {
+      digitalWrite(STATUS_LED_4, 1);
+      myFile.print(data_string);
+      digitalWrite(STATUS_LED_4, 0);
+    }
+    myFile.close();
+  } else {
+    digitalWrite(STATUS_LED_0, 1);
+  }
 }
 
 String getRecordNumberAsString() {
@@ -116,4 +146,12 @@ String getRecordNumberAsString() {
     record_string = "0" + record_string;
   }
   return record_string;
+}
+
+uint8_t getDipOneValue() {
+  return !digitalRead(DIP_1);
+}
+
+uint8_t getDipTwoValue() {
+  return !digitalRead(DIP_2);
 }
