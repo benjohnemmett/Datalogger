@@ -45,17 +45,14 @@ void setup() {
   Serial.println(record_number);
   
   pinMode(CHIP_SELECT_PIN, OUTPUT);
-  // Suggested for fixing SD card init issues
-  // -> https://embedjournal.com/arduino-sd-card-initialization-failed/#:~:text=The%20solution%20to%20this%20problem,to%20change%20it%20to%2053.
-  //digitalWrite(CHIP_SELECT_PIN, HIGH);
-
+  
   if (getDipOneValue()) {
-    fast_blinks(STATUS_LED_3, 4);
+    fast_blinks(STATUS_LED_3, 3);
     write_mode = WRITE_ALL;
   }
 
   if (getDipTwoValue()) {
-    fast_blinks(STATUS_LED_4, 4);
+    fast_blinks(STATUS_LED_4, 3);
   }
 
   start_up_lights();
@@ -71,7 +68,7 @@ void setup() {
       delay(500);
       digitalWrite(STATUS_LED_1, LOW);
     } else {
-      card_mounted = 1;
+      card_mounted = true;
     }
   }
   
