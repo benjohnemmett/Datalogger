@@ -10,6 +10,14 @@
    DIP SWITCHES
    ** DIP1 - PD2 - Arduino pin 2
    ** DIP2 - PD3 - Arduino pin 3
+
+   Arduino IDE Using USBasp programmer
+    - Arduino
+        - Board -> Arduino Uno
+        - Port -> None
+        - Programmer -> USBasp
+    - Sketch -> Upload using programmer
+        - Cmd + Shift + U
 */
 
 #include <EEPROM.h>
@@ -47,6 +55,7 @@ void setup() {
   pinMode(CHIP_SELECT_PIN, OUTPUT);
   
   if (getDipOneValue()) {
+    Serial.println("write_mode = WRITE_ALL");
     fast_blinks(STATUS_LED_3, 3);
     write_mode = WRITE_ALL;
   }
@@ -76,28 +85,33 @@ void setup() {
   delay(500);
   Serial.println("initialization done.");
 
-  Serial.println("Getting GPS data..");
-  uint8_t status_toggle = 1;
-  String data_string = Serial.readStringUntil('\n');
-  while(!gpsIsSynchronized(data_string)) {
-    data_string = Serial.readStringUntil('\n');
-    digitalWrite(STATUS_LED_2, status_toggle);
-    status_toggle = !status_toggle;
-  }
-
-  data_string = Serial.readStringUntil('\n');
-  while (!stringIsRmcData(data_string)) {
-    data_string = Serial.readStringUntil('\n');
-    digitalWrite(STATUS_LED_1, status_toggle); // Blink LED 1 & 2 until date & time are found
-    digitalWrite(STATUS_LED_2, status_toggle);
-    status_toggle = !status_toggle;
-  }
+  if (write_mode == ONLY_GGA) {
+    Serial.println("Getting GPS data..");
+    uint8_t status_toggle = 1;
+    String data_string = Serial.readStringUntil('\n');
+    while(!gpsIsSynchronized(data_string)) {
+      data_string = Serial.readStringUntil('\n');
+      digitalWrite(STATUS_LED_2, status_toggle);
+      status_toggle = !status_toggle;
+    }
   
-  // There is an 8 char filename limit DDMMYYXX.cVV
-  // https://forum.arduino.cc/t/sd-card-filename-issue/491760/4
-  // VV is the version number
-  String date_time_string = getDateFromRmcString(data_string);
-  file_name = date_time_string + getRecordNumberAsString() + "." + file_extension;
+    data_string = Serial.readStringUntil('\n');
+    while (!stringIsRmcData(data_string)) {
+      data_string = Serial.readStringUntil('\n');
+      digitalWrite(STATUS_LED_1, status_toggle); // Blink LED 1 & 2 until date & time are found
+      digitalWrite(STATUS_LED_2, status_toggle);
+      status_toggle = !status_toggle;
+    }
+    
+    // There is an 8 char filename limit DDMMYYXX.cVV
+    // https://forum.arduino.cc/t/sd-card-filename-issue/491760/4
+    // VV is the version number
+    String date_time_string = getDateFromRmcString(data_string);
+    file_name = date_time_string + getRecordNumberAsString() + "." + file_extension;
+  }
+  else {
+    file_name = "data_" + getRecordNumberAsString() + "." + file_extension;
+  }
   Serial.print("Using filename ");
   Serial.println(file_name);
   
